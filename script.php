@@ -14,16 +14,18 @@
   $data = explode( "\n", file_get_contents( 'BankTransactions.csv' ) );
   $lines = remove_utf8_bom($data);
   $header = array_shift($lines);
-  $header_array = explode(",", $header);
+  print_r("!".rtrim($header)."!");
+  $header_array = explode(",", rtrim($header));
   $csv = array();
 
-  foreach ($lines as $row) {
-    $row_array = explode(",", $row);
-    $csv[] = array_combine($header_array, $row_array);  
+  foreach ($lines as $line) {
+    $line_array = explode(",", $line);
+    $csv[] = array_combine($header_array, $line_array);  
   }
 
-  print_r($csv[0]['Date']);
-
+  print_r($csv);
+  $date = array_column($csv, 'Date');
+  array_multisort($date, $csv);
 
 print_r("\n");
-?>
+?> 

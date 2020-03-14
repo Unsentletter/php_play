@@ -19,114 +19,73 @@
       echo $js_code;
   }
 
-    class bankTransactions {
-      var $date, $transaction_number, $customer_number, $reference, $amount;
-      public function bankTransactions($data) {
-        console_log($data);
-        $this->Date = $data['Date'];
-        $this->transation_number = $data['TransactionNumber'];
-        $this->customer_number = $data['CustomerNumber'];
-        $this->reference = $data['Reference'];
-        $this->amount = $data['Amount'];
+  class EditData {
+    public static function remove_utf8_bom($text)
+    {
+        $bom = pack('H*','EFBBBF');
+        $text = preg_replace("/^$bom/", '', $text);
+        return $text;
+    }
+
+    public static function form_table($header_row_column, $header_array, $data)
+    {
+      $row = 0;
+      echo '<tbody border="1">';
+      echo '<table ><tr>';
+      while ($header_row_column < count($header_array)) {
+        echo '<th>'.$header_array[$header_row_column].'</th>';
+        $header_row_column++;
       }
-    }
-
-    function convertToObject($data) {
-      $class_object = new bankTransactions($data);
-      // console_log($class_object);
-      return $class_object;
-    }
-
-    function comparator($object1, $object2) {
-      return $object1->date > $object2->date;
-    }
-
-
-
-    $row = 1;
-    // if(($handle = fopen("BankTransactions.csv", "r")) !== FALSE) {
-      echo '<table border="1"';
-
-      // $lines = explode( "\n", file_get_contents( 'BankTransactions.csv' ) );
-      // $headers = str_getcsv( array_shift( $lines ) );
-      // $data = array();
-      // foreach ( $lines as $line ) {
-      //   $row = array();
-      //   foreach ( str_getcsv( $line ) as $key => $field )
-      //     $row[ $headers[ $key ] ] = $field;
-      //   $row = array_filter( $row );
-      //   $data[] = $row;
-      // }
-
-      function remove_utf8_bom($text)
-      {
-          $bom = pack('H*','EFBBBF');
-          $text = preg_replace("/^$bom/", '', $text);
-          return $text;
+      echo '</tr>';
+      while($row < count($data)) {
+        echo '<tr>';
+        for ($i=0; $i < count($data[$row]); $i++) {
+          $header_name = $header_array[$i];
+          echo '<td>'.$data[$row][$header_name].'</td>';
+        }
+        echo '</tr>';
+        $row++;
       }
+      echo '</table>';
+      echo '</tbody>';
+    }
+
+    public static function format_values($data) {
+      for ($i=0; $i < count($data); $i++) {
+        $data[$i]['Date'] = date('Y-m-d h:iA', strtotime($data[$i]['Date']));
+        $data[$i]['TransactionCode'] = strval($data[$i]['TransactionCode']);
+        // Need to validate this
+        $data[$i]['CustomerNumber'] = intval($data[$i]['CustomerNumber']);
+        $data[$i]['Reference'] = strval($data[$i]['Reference']);
+        $data[$i]['Amount'] = number_format(round(floatval($data[$i]['Amount']), 2), 2, '.', '');
+      }
+      return $data;
+    }
+  }
+
   
     if (($handle = fopen("BankTransactions.csv", "r")) === FALSE)
       throw new Exception("Couldn't open .csv");
   
     $csv = explode( "\n", file_get_contents( 'BankTransactions.csv' ) );
-    $lines = remove_utf8_bom($csv);
+    $lines = EditData::remove_utf8_bom($csv);
     $header = array_shift($lines);
-    $header_array = explode(",", $header);
-    console_log($header_array);
+    $header_array = explode(",", rtrim($header));
     $data = array();
   
-    foreach ($lines as $row) {
-      $row_array = explode(",", $row);
-      console_log($row_array);
-
-      $data[] = array_combine($header_array, $row_array);  
+    foreach ($lines as $line) {
+      $line_array = explode(",", $line);
+      $data[] = array_combine($header_array, $line_array);  
     }
 
+    $date = array_column($data, 'Date');
+    array_multisort($date, $data);
+    $header_row_column = 0;
+    // console_log($data);
+
+    $data = EditData::format_values($data);
     console_log($data);
-      
-      // while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        $num = count($data);
-        // console_log($data);
-        convertToObject($data);
-        if($row == 1) {
-          echo '<thead><tr>';
-        } else {
-          echo '<tr>';
-        }
-
-        for($c=0; $c < $num; $c++) {
-          // if(empty($data[$c])) {
-          //   $value = "&nbsp;";
-          // } else {
-          //   $value = $data[$c];
-          // }
-          // if($row == 1) {
-          //   $split_row = explode(",", $value);
-          //   $row_num = count($split_row);
-
-          //   for($i=0; $i < $row_num; $i++) {
-          //     echo '<th>'.$split_row[$i].'</th>';
-          //   }
-          // } else {
-          //   $split_row = explode(",", $value);
-          //   $row_num = count($split_row);
-
-          //   for($i=0; $i < $row_num; $i++) {
-          //     echo '<td>'.$split_row[$i].'</td>';
-          //   }
-          // }
-        }
-        if($row == 1) {
-          echo '</tr></thead?><tbody>';
-        } else {
-          echo '</tr>';
-        }
-        $row++;
-      // }
-
-      echo '<tbody></table>';
-      // fclose($handle);
-    // }
+    EditData::form_table($header_row_column, $header_array, $data);
 ?>
   </body>
 </html>
