@@ -8,10 +8,19 @@ session_start();
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Page Title</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="index.css" />
     <script src="main.js"></script>
   </head>
   <body>
+
+<h1>Upload new CSV</h1>
+  <form action="upload.php" method="POST" enctype="multipart/form-data" class="form">
+    Select CSV to upload:
+    <div class="buttonWrapper">
+      <input type="file" name="uploadedFile" class="button">
+      <input type="submit" value="Upload File" name="uploadBtn" class="uploadButton">
+    </div>
+  </form>
   <?php
     if (isset($_SESSION['message']) && $_SESSION['message'])
     {
@@ -19,23 +28,7 @@ session_start();
       unset($_SESSION['message']);
     }
   ?>
-
-  <form action="upload.php" method="POST" enctype="multipart/form-data">
-    Upload shit:
-    <input type="file" name="uploadedFile">
-    <input type="submit" value="Upload File" name="uploadBtn">
-  </form>
-
-    <?php
-    function console_log($output, $with_script_tags = true) {
-      $js_code = 'console.log(' . json_encode($output, JSON_HEX_TAG) . 
-  ');';
-      if ($with_script_tags) {
-          $js_code = '<script>' . $js_code . '</script>';
-      }
-      echo $js_code;
-  };
-
+  <?php
   class EditData {
     public static function remove_utf8_bom($text)
     {
@@ -47,18 +40,30 @@ session_start();
     public static function form_table($header_row_column, $header_array, $data)
     {
       $row = 0;
-      echo '<tbody border="1">';
+      echo '<tbody class="dataTable">';
       echo '<table ><tr>';
       while ($header_row_column < count($header_array)) {
-        echo '<th>'.$header_array[$header_row_column].'</th>';
+        echo '<th class="headerItem">'.$header_array[$header_row_column].'</th>';
         $header_row_column++;
       }
       echo '</tr>';
       while($row < count($data)) {
-        echo '<tr>';
+        if($row % 2 == 0) {
+          echo '<tr class="dataRowEven">';
+        } else {
+          echo '<tr class="dataRowOdd">';
+        }
         for ($i=0; $i < count($data[$row]); $i++) {
           $header_name = $header_array[$i];
-          echo '<td>'.$data[$row][$header_name].'</td>';
+          if($header_name == 'Amount') {
+            if($data[$row][$header_name] < 0) {
+              echo '<td class="negativeAmount">'.$data[$row][$header_name].'</td>';  
+            } else {
+              echo '<td >'.$data[$row][$header_name].'</td>';
+            }
+          } else {
+            echo '<td>'.$data[$row][$header_name].'</td>';
+          }
         }
         echo '</tr>';
         $row++;
@@ -80,10 +85,26 @@ session_start();
     }
   }
   
-  if (($handle = fopen("BankTransactions.csv", "r")) === FALSE)
+  function sort_by_time($a, $b) {
+    return $b - $a;
+  }
+
+  $files = glob("./uploads/*.csv");
+  $times = array();
+  foreach($files as $file) {
+    $times[] = filemtime($file);
+  }
+
+  $unsorted_times_array = $times;
+  usort($times, 'sort_by_time');
+  $key = array_search($times[0], $unsorted_times_array);
+
+  if(count($files) == 0) return;
+
+  if (($handle = fopen($files[$key], "r")) === FALSE)
     throw new Exception("Couldn't open .csv");
 
-  $csv = explode( "\n", file_get_contents( 'BankTransactions.csv' ) );
+  $csv = explode( "\n", rtrim(file_get_contents($files[$key])));
   $lines = EditData::remove_utf8_bom($csv);
   $header = array_shift($lines);
   $header_array = explode(",", rtrim($header));
@@ -97,8 +118,6 @@ session_start();
   $date = array_column($data, 'Date');
   array_multisort($date, $data);
   $header_row_column = 0;
-  // console_log($data);
-
   $data = EditData::format_values($data);
   EditData::form_table($header_row_column, $header_array, $data);
 ?>

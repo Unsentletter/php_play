@@ -1,0 +1,29 @@
+.buttonWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.uploadButton {
+  width: 72px;
+}
+
+table {
+  width: 100%;
+}
+
+.headerItem {
+  justify-content: space-evenly;
+}
+
+.dataRowEven {
+  height: 30px;
+  background-color: lightgray;
+}
+
+.dataRowOdd {
+  height: 30px;
+}
+
+.negativeAmount {
+  color: red;
+}
