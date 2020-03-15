@@ -48,15 +48,16 @@ session_start();
       }
       echo '</tr>';
       while($row < count($data)) {
-        if($row % 2 == 0) {
+        if ($row % 2 == 0) {
           echo '<tr class="dataRowEven">';
         } else {
           echo '<tr class="dataRowOdd">';
         }
+        
         for ($i=0; $i < count($data[$row]); $i++) {
           $header_name = $header_array[$i];
-          if($header_name == 'Amount') {
-            if($data[$row][$header_name] < 0) {
+          if ($header_name == 'Amount') {
+            if ($data[$row][$header_name] < 0) {
               echo '<td class="negativeAmount">'.$data[$row][$header_name].'</td>';  
             } else {
               echo '<td >'.$data[$row][$header_name].'</td>';
@@ -72,7 +73,8 @@ session_start();
       echo '</tbody>';
     }
 
-    public static function format_values($data) {
+    public static function format_values($data) 
+    {
       for ($i=0; $i < count($data); $i++) {
         $data[$i]['Date'] = date('Y-m-d h:iA', strtotime($data[$i]['Date']));
         $data[$i]['TransactionCode'] = strval($data[$i]['TransactionCode']);
@@ -85,7 +87,8 @@ session_start();
     }
   }
   
-  function sort_by_time($a, $b) {
+  function sort_by_time($a, $b) 
+  {
     return $b - $a;
   }
 
@@ -99,7 +102,7 @@ session_start();
   usort($times, 'sort_by_time');
   $key = array_search($times[0], $unsorted_times_array);
 
-  if(count($files) == 0) return;
+  if (count($files) == 0) return;
 
   if (($handle = fopen($files[$key], "r")) === FALSE)
     throw new Exception("Couldn't open .csv");
