@@ -1,3 +1,6 @@
+<?php
+session_start(); 
+?>
 <!DOCTYPE html>
 <html>
   <head>
@@ -9,6 +12,20 @@
     <script src="main.js"></script>
   </head>
   <body>
+  <?php
+    if (isset($_SESSION['message']) && $_SESSION['message'])
+    {
+      printf('<b>%s</b>', $_SESSION['message']);
+      unset($_SESSION['message']);
+    }
+  ?>
+
+  <form action="upload.php" method="POST" enctype="multipart/form-data">
+    Upload shit:
+    <input type="file" name="uploadedFile">
+    <input type="submit" value="Upload File" name="uploadBtn">
+  </form>
+
     <?php
     function console_log($output, $with_script_tags = true) {
       $js_code = 'console.log(' . json_encode($output, JSON_HEX_TAG) . 
@@ -17,7 +34,7 @@
           $js_code = '<script>' . $js_code . '</script>';
       }
       echo $js_code;
-  }
+  };
 
   class EditData {
     public static function remove_utf8_bom($text)
@@ -62,30 +79,28 @@
       return $data;
     }
   }
-
   
-    if (($handle = fopen("BankTransactions.csv", "r")) === FALSE)
-      throw new Exception("Couldn't open .csv");
-  
-    $csv = explode( "\n", file_get_contents( 'BankTransactions.csv' ) );
-    $lines = EditData::remove_utf8_bom($csv);
-    $header = array_shift($lines);
-    $header_array = explode(",", rtrim($header));
-    $data = array();
-  
-    foreach ($lines as $line) {
-      $line_array = explode(",", $line);
-      $data[] = array_combine($header_array, $line_array);  
-    }
+  if (($handle = fopen("BankTransactions.csv", "r")) === FALSE)
+    throw new Exception("Couldn't open .csv");
 
-    $date = array_column($data, 'Date');
-    array_multisort($date, $data);
-    $header_row_column = 0;
-    // console_log($data);
+  $csv = explode( "\n", file_get_contents( 'BankTransactions.csv' ) );
+  $lines = EditData::remove_utf8_bom($csv);
+  $header = array_shift($lines);
+  $header_array = explode(",", rtrim($header));
+  $data = array();
 
-    $data = EditData::format_values($data);
-    console_log($data);
-    EditData::form_table($header_row_column, $header_array, $data);
+  foreach ($lines as $line) {
+    $line_array = explode(",", $line);
+    $data[] = array_combine($header_array, $line_array);  
+  }
+
+  $date = array_column($data, 'Date');
+  array_multisort($date, $data);
+  $header_row_column = 0;
+  // console_log($data);
+
+  $data = EditData::format_values($data);
+  EditData::form_table($header_row_column, $header_array, $data);
 ?>
   </body>
 </html>
